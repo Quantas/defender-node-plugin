@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 var fs = require('fs');
+var os = require('os');
 var http = require('http');
 var package = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
@@ -28,7 +29,7 @@ var request = http.request(options, function(res) {
 });
 
 request.write(JSON.stringify({
-    'user': process.env.USER,
+    'user': os.userInfo().username,
     'app': {
         'artifactId': package.name,
         'version': package.version
