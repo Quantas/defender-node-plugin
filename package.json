@@ -1,0 +1,15 @@
+{
+  "name": "defender",
+  "version": "1.0.0",
+  "description": "Quantasnet Defender Node Plugin",
+  "scripts": {
+    "defender": "defender"
+  },
+  "author": "Andrew Landsverk <dewdew@gmail.com> (https://www.quantasnet.com)",
+  "license": "ISC",
+  "private": true,
+  "preferGlobal": true,
+  "bin": {
+    "defender": "index.js"
+  }
+}
