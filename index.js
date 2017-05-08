@@ -9,7 +9,17 @@ var deps, devDeps;
 
 if (package.dependencies) {
     deps = Object.keys(package.dependencies).map(p => {
-        return { 'groupId': '', 'artifactId' : p, 'version': package.dependencies[p].replace('^', '').replace('~', '') };
+        var groupId, artifactId;
+        if (p.indexOf('/') > -1) {
+            var split = p.split('/');
+            groupId = split[0];
+            artifactId = split[1];
+        } else {
+            groupId = '';
+            artifactId = p;
+        }
+
+        return { 'groupId': groupId, 'artifactId' : artifactId, 'version': package.dependencies[p].replace('^', '').replace('~', '') };
     });
 } else {
     deps = [];
@@ -17,7 +27,16 @@ if (package.dependencies) {
 
 if (package.devDependencies) {
     devDeps = Object.keys(package.devDependencies).map(p => {
-        return { 'groupId': '', 'artifactId' : p, 'version': package.devDependencies[p].replace('^', '').replace('~', '') };
+        var groupId, artifactId;
+        if (p.indexOf('/') > -1) {
+            var split = p.split('/');
+            groupId = split[0];
+            artifactId = split[1];
+        } else {
+            groupId = '';
+            artifactId = p;
+        }
+        return { 'groupId': groupId, 'artifactId' : artifactId, 'version': package.devDependencies[p].replace('^', '').replace('~', '') };
     });
 } else {
     devDeps = [];
