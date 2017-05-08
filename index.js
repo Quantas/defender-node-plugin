@@ -5,42 +5,38 @@ var os = require('os');
 var http = require('http');
 var package = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-var deps, devDeps;
+var collectDeps = function(deps) {
+    var retVal;
 
-if (package.dependencies) {
-    deps = Object.keys(package.dependencies).map(p => {
-        var groupId, artifactId;
-        if (p.indexOf('/') > -1) {
-            var split = p.split('/');
-            groupId = split[0];
-            artifactId = split[1];
-        } else {
-            groupId = '';
-            artifactId = p;
-        }
+    if (deps) {
+        retVal = Object.keys(deps).map(p => {
+            var groupId, artifactId;
 
-        return { 'groupId': groupId, 'artifactId' : artifactId, 'version': package.dependencies[p].replace('^', '').replace('~', '') };
-    });
-} else {
-    deps = [];
-}
+            if (p.indexOf('/') > -1) {
+                var split = p.split('/');
+                groupId = split[0];
+                artifactId = split[1];
+            } else {
+                groupId = '';
+                artifactId = p;
+            }
 
-if (package.devDependencies) {
-    devDeps = Object.keys(package.devDependencies).map(p => {
-        var groupId, artifactId;
-        if (p.indexOf('/') > -1) {
-            var split = p.split('/');
-            groupId = split[0];
-            artifactId = split[1];
-        } else {
-            groupId = '';
-            artifactId = p;
-        }
-        return { 'groupId': groupId, 'artifactId' : artifactId, 'version': package.devDependencies[p].replace('^', '').replace('~', '') };
-    });
-} else {
-    devDeps = [];
-}
+            return { 
+                'groupId': groupId,
+                'artifactId' : artifactId,
+                'version': deps[p].replace('^', '').replace('~', '')
+            };
+        });
+    } else {
+        retVal = [];
+    }
+
+    return retVal;
+};
+
+var deps = collectDeps(package.dependencies);
+var devDeps = collectDeps(package.devDependencies);
+var artifacts = deps.concat(devDeps);
 
 var options = {
     host: 'localhost',
@@ -67,7 +63,7 @@ request.write(JSON.stringify({
         'artifactId': package.name,
         'version': package.version
     },
-    'artifacts': deps.concat(devDeps)
+    'artifacts': artifacts
 }));
 request.end();
 request.on('error', function(e) {
