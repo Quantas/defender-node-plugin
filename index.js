@@ -57,11 +57,20 @@ var request = http.request(options, function(res) {
     });
 });
 
+let packageRepo = '';
+if (package.repository && package.repository.url) {
+    packageRepo = package.repository.url;
+}
+
 request.write(JSON.stringify({
     'user': os.userInfo().username,
     'app': {
         'artifactId': package.name,
-        'version': package.version
+        'version': package.version,
+        'description': package.description,
+        'license': package.license,
+        'repository': packageRepo,
+        'url': package.homepage
     },
     'artifacts': artifacts
 }));
