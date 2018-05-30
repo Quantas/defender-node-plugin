@@ -2,8 +2,8 @@
 
 var fs = require('fs');
 var os = require('os');
-var http = require('http');
-var package = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+var request = require('sync-request');
+var pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 var collectDeps = function(deps) {
     var retVal;
@@ -34,47 +34,46 @@ var collectDeps = function(deps) {
     return retVal;
 };
 
-var deps = collectDeps(package.dependencies);
-var devDeps = collectDeps(package.devDependencies);
-var artifacts = deps.concat(devDeps);
-
-var options = {
-    host: 'localhost',
-    port: 8080,
-    path: '/api/protect',
-    method: 'POST',
-    headers: {
-        'Content-Type' : 'application/json',
-        'X-DEFENDER-TYPE': 'NODE'
-    }
-};
-
-var request = http.request(options, function(res) {
-    console.log("response = " + res.statusCode);
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-        console.log(chunk);
-    });
-});
+let deps = collectDeps(pkg.dependencies);
+let devDeps = collectDeps(pkg.devDependencies);
+let artifacts = deps.concat(devDeps);
 
 let packageRepo = '';
-if (package.repository && package.repository.url) {
-    packageRepo = package.repository.url;
+if (pkg.repository && pkg.repository.url) {
+    packageRepo = pkg.repository.url;
 }
 
-request.write(JSON.stringify({
-    'user': os.userInfo().username,
-    'app': {
-        'artifactId': package.name,
-        'version': package.version,
-        'description': package.description,
-        'license': package.license,
-        'repository': packageRepo,
-        'url': package.homepage
+let response = request('POST', 'http://localhost:8080/api/protect', {
+    headers: {
+        'X-DEFENDER-TYPE': 'NODE'
     },
-    'artifacts': artifacts
-}));
-request.end();
-request.on('error', function(e) {
-    console.error(e);
+    json: {
+        'user': os.userInfo().username,
+        'app': {
+            'artifactId': pkg.name,
+            'version': pkg.version,
+            'description': pkg.description,
+            'license': pkg.license,
+            'repository': packageRepo,
+            'url': pkg.homepage
+        },
+        'artifacts': artifacts
+    }
 });
+
+let body = JSON.parse(response.getBody('utf8'));
+
+if (body['passed']) {
+    console.log('Defender Success!')
+} else {
+    console.log('Defender Failed!');
+
+    body.buildDependencies
+        .filter(dep => !dep.dependencyStatus.approved)
+        .forEach(dep => {
+            const groupId = dep.dependency.groupId ? dep.dependency.groupId + '/' : '';
+            console.log(groupId + dep.dependency.artifactId + '@' + dep.dependency.version + ' --- ' + dep.dependencyStatus.status);
+        });
+
+    throw new Error('Defender Failed!');
+}

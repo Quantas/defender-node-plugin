@@ -11,5 +11,8 @@
   "preferGlobal": true,
   "bin": {
     "defender": "index.js"
+  },
+  "dependencies": {
+    "sync-request": "6.0.0"
   }
 }
