@@ -43,7 +43,11 @@ if (pkg.repository && pkg.repository.url) {
     packageRepo = pkg.repository.url;
 }
 
-let response = request('POST', 'http://localhost:8080/api/protect', {
+if (!process.argv[2]) {
+    throw new Error('First argument must be the path to defender (https://defender.example.com)');
+}
+
+let response = request('POST', process.argv[2] + '/api/protect', {
     headers: {
         'X-DEFENDER-TYPE': 'NODE'
     },
